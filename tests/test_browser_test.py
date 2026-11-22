@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from xsspg.browser_test import (
     _is_dvwa_login_page,
+    _route_local_websocket,
     _same_origin,
     run_reflected_xss_test,
 )
@@ -106,14 +107,37 @@ class FakePage:
         return FakeDialogWaiter(self)
 
 
+class FakeWebSocketRoute:
+    def __init__(self, url):
+        self.url = url
+        self.connected = False
+        self.closed = False
+        self.close_code = None
+        self.close_reason = None
+
+    def connect_to_server(self):
+        self.connected = True
+
+    def close(self, code=None, reason=None):
+        self.closed = True
+        self.close_code = code
+        self.close_reason = reason
+
+
 class FakeContext:
     def __init__(self, page):
         self.page = page
         self.closed = False
         self.routed = False
+        self.websocket_routed = False
+        self.websocket_handler = None
 
     def route(self, pattern, handler):
         self.routed = True
+
+    def route_web_socket(self, pattern, handler):
+        self.websocket_routed = True
+        self.websocket_handler = handler
 
     def new_page(self):
         return self.page
@@ -183,6 +207,34 @@ class BrowserTestGuardTests(unittest.TestCase):
         self.assertFalse(
             _same_origin("http://127.0.0.1:not-a-port/file", "http://127.0.0.1:4280")
         )
+
+    def test_same_origin_accepts_local_websocket(self):
+        self.assertTrue(
+            _same_origin("ws://127.0.0.1:4280/socket", "http://127.0.0.1:4280")
+        )
+
+    def test_same_origin_rejects_remote_websocket(self):
+        self.assertFalse(
+            _same_origin("wss://example.com/socket", "http://127.0.0.1:4280")
+        )
+
+    def test_same_origin_rejects_websocket_userinfo(self):
+        self.assertFalse(
+            _same_origin("ws://user:pass@127.0.0.1:4280/socket", "http://127.0.0.1:4280")
+        )
+
+    def test_websocket_policy_forwards_local_and_closes_remote(self):
+        local = FakeWebSocketRoute("ws://127.0.0.1:4280/socket")
+        remote = FakeWebSocketRoute("wss://example.com/socket")
+
+        _route_local_websocket(local, "http://127.0.0.1:4280")
+        _route_local_websocket(remote, "http://127.0.0.1:4280")
+
+        self.assertTrue(local.connected)
+        self.assertFalse(local.closed)
+        self.assertFalse(remote.connected)
+        self.assertTrue(remote.closed)
+        self.assertEqual(remote.close_code, 1008)
 
     def test_browser_test_rejects_non_project_payload(self):
         result = run_reflected_xss_test(
@@ -302,6 +354,8 @@ class BrowserTestLifecycleTests(unittest.TestCase):
         )
         self.assertTrue(alert_acknowledged)
         self.assertTrue(page.dialog.accepted)
+        self.assertTrue(context.routed)
+        self.assertTrue(context.websocket_routed)
         self.assertTrue(context.closed)
         self.assertTrue(browser.closed)
         self.assertIn("[1/7] Local Chromium launched successfully.", progress)

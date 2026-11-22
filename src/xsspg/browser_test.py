@@ -20,17 +20,36 @@ class BrowserTestResult:
 
 
 def _same_origin(candidate: str, target: str) -> bool:
-    """Allow browser requests only to the validated target origin."""
+    """Compare an HTTP(S) or WS(S) URL with the validated target origin.
+
+    WebSocket schemes map to their corresponding HTTP origin schemes for
+    same-origin comparison: ws->http and wss->https.
+    """
     try:
         left = urlsplit(candidate)
         right = urlsplit(target)
+        left_scheme = {"ws": "http", "wss": "https"}.get(left.scheme, left.scheme)
+        right_scheme = {"ws": "http", "wss": "https"}.get(right.scheme, right.scheme)
         return (
-            left.scheme == right.scheme
+            left_scheme == right_scheme
             and left.hostname == right.hostname
             and left.port == right.port
+            and left.username is None
+            and left.password is None
         )
     except ValueError:
         return False
+
+
+def _route_local_websocket(websocket, target: str) -> None:
+    """Forward same-origin WebSockets and close all other destinations."""
+    if _same_origin(websocket.url, target):
+        websocket.connect_to_server()
+    else:
+        websocket.close(
+            code=1008,
+            reason="XSS-PG permits WebSocket connections only to the local DVWA origin.",
+        )
 
 
 def _is_dvwa_login_page(page) -> bool:
@@ -116,6 +135,12 @@ def run_reflected_xss_test(
                             route.abort()
 
                     context.route("**/*", local_only)
+                    # Playwright HTTP routing does not automatically cover
+                    # WebSocket connections, so enforce the same origin policy
+                    # for WebSockets separately before creating the page.
+                    context.route_web_socket(
+                        "**/*", lambda websocket: _route_local_websocket(websocket, target)
+                    )
                     page = context.new_page()
                     page.set_default_timeout(timeout_ms)
 

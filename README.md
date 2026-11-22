@@ -7,12 +7,12 @@ XSS-PG is a small Python command-line tool for generating one harmless proof-of-
 ## What it does
 
 1. Requires an explicit authorization confirmation.
-2. Accepts only `http://localhost:4280`, `http://127.0.0.1:4280`, or IPv6 loopback on port `4280`.
+2. Accepts only `http://localhost:4280` or `http://127.0.0.1:4280`. IPv6 loopback is not currently supported by the supplied Compose binding.
 3. Checks that the service presents the DVWA login page before proceeding.
 4. Generates a fixed alert-only payload for DVWA's Reflected XSS `name` parameter.
 5. Uses Playwright to log in, set the session's DVWA security level to **Low**, and open the Reflected XSS module.
 6. Separates payload preparation from submission: after an operator checkpoint, XSS-PG places the payload in the `name` field but does not submit it. It reports that the payload is prepared and waits at a second checkpoint. Only a subsequent Enter submits the form.
-7. Restricts browser requests to the validated local origin, reports each testing stage, verifies the expected browser alert, and closes the browser after the test. Option 2 uses five operator checkpoints: after Chromium starts, after login succeeds, after Low security is confirmed, before preparing the payload, and after preparation but immediately before submission. In visible mode, the successful browser alert remains open until the user presses Enter in the terminal.
+7. Restricts browser HTTP requests and WebSocket connections to the validated local origin, reports each testing stage, verifies the expected browser alert, and closes the browser after the test. Option 2 uses five operator checkpoints: after Chromium starts, after login succeeds, after Low security is confirmed, before preparing the payload, and after preparation but immediately before submission. In visible mode, the successful browser alert remains open until the user presses Enter in the terminal.
 
 A matching browser alert is the proof-of-execution signal. An HTTP response that merely contains the payload is not reported as a verified XSS finding.
 
@@ -145,7 +145,7 @@ This is intentionally limited to a visible alert. Do not replace it with payload
 - **Authorization:** explicit confirmation is required at startup.
 - **Scope:** target scheme, host and port are fixed to local HTTP loopback on port 4280; target paths, URL credentials and remote hosts are rejected.
 - **Target identification:** the application checks for DVWA's login-page signature before starting a browser and reports connection refusal/timeouts without exposing raw operating-system error text.
-- **Browser egress:** Playwright requests are allowed only to the validated target origin.
+- **Browser egress:** Playwright HTTP requests and WebSocket connections are allowed only to the validated target origin. Service workers are blocked so they cannot bypass Playwright request routing. This is an application-level lab safeguard, not a replacement for an operating-system firewall. The tool does not claim to control unrelated browser traffic mechanisms such as WebRTC.
 - **Test scope:** only the Reflected XSS module at Low security is exercised.
 - **Credentials:** requested interactively and used only for the local DVWA login session; not written to files or displayed.
 - **Data handling:** no target data is collected or exported.
@@ -178,4 +178,4 @@ Use only the local lab or systems covered by explicit written authorization. Una
 
 ## Project status
 
-Current development baseline: 33 automated unit tests pass. The browser lifecycle tests use mocked Playwright objects; complete a real local DVWA browser demonstration after updating the project before describing the updated version as fully verified or creating the `v1.0.0` release.
+Current development baseline: 41 automated unit tests pass. The browser lifecycle tests use mocked Playwright objects; complete a real local DVWA browser demonstration after updating the project before describing the updated version as fully verified or creating the `v1.0.0` release.
