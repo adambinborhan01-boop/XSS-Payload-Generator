@@ -2,6 +2,13 @@
 
 XSS-PG is a small Python command-line tool for generating one harmless proof-of-execution payload and verifying it against the **Reflected XSS (Low)** training module in a locally hosted **Damn Vulnerable Web Application (DVWA)** instance.
 
+## Attack category
+
+**Web Application Attack — Cross-Site Scripting (XSS)**
+**Selected subtype:** Reflected XSS, tested against DVWA at the Low security level.
+
+XSS-PG is intentionally limited to this one training scenario. It is not a general-purpose vulnerability scanner.
+
 > **Scope:** local DVWA lab only. The tool does not scan arbitrary sites, crawl applications, test stored/DOM XSS, steal credentials, access cookies, exfiltrate data, persist, or perform filter-evasion.
 
 ## What it does
@@ -15,6 +22,31 @@ XSS-PG is a small Python command-line tool for generating one harmless proof-of-
 7. Restricts browser HTTP requests and WebSocket connections to the validated local origin, reports each testing stage, verifies the expected browser alert, and closes the browser after the test. Option 2 uses five operator checkpoints: after Chromium starts, after login succeeds, after Low security is confirmed, before preparing the payload, and after preparation but immediately before submission. In visible mode, the successful browser alert remains open until the user presses Enter in the terminal.
 
 A matching browser alert is the proof-of-execution signal. An HTTP response that merely contains the payload is not reported as a verified XSS finding.
+
+## Attack lifecycle mapping
+
+The tool demonstrates a constrained portion of the ethical hacking lifecycle:
+
+| Lifecycle stage | XSS-PG activity | Boundary |
+|---|---|---|
+| Reconnaissance / target identification | Validates the explicitly authorized loopback target and checks for the DVWA login-page signature. | No internet-wide discovery or host scanning. |
+| Scanning / input identification | Opens DVWA's Reflected XSS training module and locates its `name` input. | No crawling or discovery of other application inputs. |
+| Payload preparation | Generates the fixed alert-only proof payload and places it in the form after an operator checkpoint. | No obfuscation, filter bypass, cookie access or data collection. |
+| Exploitation / delivery | Submits the prepared payload only after a separate operator checkpoint. | One test against DVWA Reflected XSS at Low security. |
+| Verification | Confirms that the browser displayed the expected `XSS-PG` JavaScript alert. | A reflected string without the matching browser alert is not reported as verified. |
+| Reporting | Displays the result in the terminal; the operator may retain local screenshots as evidence. | The tool does not collect target data or generate a remote report. |
+
+Maintaining access, persistence and covering tracks are deliberately outside this project's scope.
+
+## Screenshots and test evidence
+
+The repository's `docs/screenshots/` directory contains terminal and browser evidence from the local DVWA lab. Selected examples:
+
+![XSS-PG application startup](docs/screenshots/01%20%E2%80%94%20Application%20startup.png)
+
+![XSS-PG successful reflected XSS verification](docs/screenshots/03%20%E2%80%94%20Successful%20XSS%20verification%201.png)
+
+Additional evidence: [payload generation](docs/screenshots/02%20%E2%80%94%20Payload%20generation.png) · [browser verification capture](docs/screenshots/03.1%20%E2%80%94%20Successful%20XSS%20verification%202.png) · [automated test output](docs/screenshots/04%20%E2%80%94%20Automated%20testing.png) · [DVWA Low configuration](docs/screenshots/05%20%E2%80%94%20DVWA%20configuration.png) · [authorization declined](docs/screenshots/06-authorization-declined.png) · [invalid credentials](docs/screenshots/07-invalid-credentials.png) · [DVWA unavailable](docs/screenshots/08-dvwa-unavailable.png) · [Ctrl+C interruption](docs/screenshots/09-ctrl-c-interruption.png) · [payload prepared but not submitted](docs/screenshots/10-prepared-but-not-submitted%20state.png).
 
 ## Requirements
 
@@ -140,7 +172,7 @@ The default demonstration payload is:
 
 This is intentionally limited to a visible alert. Do not replace it with payloads that access cookies, credentials, local storage, or transmit data.
 
-## Safety controls and limitations
+## Ethical considerations, safety controls and limitations
 
 - **Authorization:** explicit confirmation is required at startup.
 - **Scope:** target scheme, host and port are fixed to local HTTP loopback on port 4280; target paths, URL credentials and remote hosts are rejected.
@@ -178,4 +210,4 @@ Use only the local lab or systems covered by explicit written authorization. Una
 
 ## Project status
 
-Current development baseline: 41 automated unit tests pass. The browser lifecycle tests use mocked Playwright objects; complete a real local DVWA browser demonstration after updating the project before describing the updated version as fully verified or creating the `v1.0.0` release.
+Current development baseline: 41 automated unit tests pass. The project team has also completed a live Windows demonstration against its local DVWA Reflected XSS (Low) module, including the separate payload-preparation and submission checkpoints and visible browser alert. Browser lifecycle unit tests use mocked Playwright objects; they supplement but do not replace the live DVWA demonstration. Repeat the documented installation and live test when preparing a clean release candidate.
