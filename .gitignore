@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+output/
+playwright-report/
+test-results/
+*.egg-info/
+build/
+dist/

@@ -1,0 +1,34 @@
+# Local-only DVWA lab based on the official digininja/DVWA Compose configuration.
+# The application is deliberately vulnerable. Do not publish this port to a network.
+services:
+  dvwa:
+    image: ghcr.io/digininja/dvwa:latest
+    pull_policy: always
+    environment:
+      - DB_SERVER=db
+    depends_on:
+      - db
+    networks:
+      - dvwa
+    ports:
+      - "127.0.0.1:4280:80"
+    restart: unless-stopped
+
+  db:
+    image: mariadb:10
+    environment:
+      - MYSQL_ROOT_PASSWORD=dvwa
+      - MYSQL_DATABASE=dvwa
+      - MYSQL_USER=dvwa
+      - MYSQL_PASSWORD=p@ssw0rd
+    volumes:
+      - dvwa:/var/lib/mysql
+    networks:
+      - dvwa
+    restart: unless-stopped
+
+volumes:
+  dvwa:
+
+networks:
+  dvwa:
