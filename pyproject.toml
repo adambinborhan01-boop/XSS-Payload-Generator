@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xss-pg"
-version = "0.2.0"
+version = "1.0.0"
 description = "Local DVWA Reflected XSS payload generator and browser verifier"
 requires-python = ">=3.10"
 dependencies = ["playwright>=1.48,<2"]
