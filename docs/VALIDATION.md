@@ -1,6 +1,6 @@
 # XSS-PG validation record
 
-This record distinguishes automated unit-test evidence from manual end-to-end checks. The tool is designed for the local DVWA Reflected XSS (Low) training scenario only.
+This record distinguishes automated unit-test evidence from manual end-to-end checks. XSS-PG is designed for one authorized training scenario: the local DVWA Reflected XSS module at Low security.
 
 ## Automated validation
 
@@ -10,7 +10,7 @@ Command:
 python -m unittest discover -s tests -v
 ```
 
-Latest reported result from the project team's Windows environment: **41 tests passed**.
+**Latest reported result from the project team's Windows environment: 41 tests passed.** The same 41-test suite passed in the separate release-test virtual environment described below.
 
 The suite covers:
 
@@ -23,6 +23,19 @@ The suite covers:
 - clean CLI interruption handling.
 
 The mocked browser lifecycle tests are unit tests. They do not replace the live browser test against DVWA.
+
+## Release-test environment
+
+The project team reported the following verification on Windows:
+
+- Created a separate Python 3.14 virtual environment at `%TEMP%\xss-pg-release-test`.
+- Installed the project from the working project directory with `python -m pip install --no-cache-dir -e .`.
+- Installed Playwright Chromium with `python -m playwright install chromium`.
+- Confirmed with `python -m pip show xss-pg` that the installed package version was `1.0.0`.
+- Ran the full unit-test suite: **41 tests passed**.
+- Launched the installed `xss-pg` command and completed the live DVWA Reflected XSS (Low) workflow.
+
+**Scope of this check:** This was a fresh virtual environment, but the package was installed in editable mode from the existing project working tree. It was not a fresh Git clone. The DVWA instance had already been deployed and initialized locally; a clean-room Docker Compose deployment from a fresh clone was not part of this test.
 
 ## Manual checks reported by the project team
 
@@ -38,20 +51,21 @@ The mocked browser lifecycle tests are unit tests. They do not replace the live 
 | Payload preparation checkpoint | Filled the `name` field without submitting the form |
 | Separate submission checkpoint | Required a second Enter before submitting the form |
 | Live test after WebSocket-scope hardening | Completed successfully against the local DVWA instance |
+| Release-test environment | Installed package version `1.0.0`, passed all 41 tests, and completed the live DVWA workflow |
 
 Screenshots for the manual checks are stored in `docs/screenshots/`.
 
-## Release-candidate checks still required
+## Published release
 
-Before publishing `v1.0.0`, repeat these checks from a fresh clone or clean working copy:
+- Package version: `1.0.0`.
+- GitHub repository: https://github.com/adambinborhan01-boop/XSS-Payload-Generator
+- Published GitHub Release: https://github.com/adambinborhan01-boop/XSS-Payload-Generator/releases/tag/v1.0.0
+- Release tag `v1.0.0` points to commit `dc02bd5` (`release: prepare XSS-PG v1.0.0`).
 
-1. Create a fresh Python virtual environment and install `requirements.txt`.
-2. Install Playwright Chromium with `python -m playwright install chromium`.
-3. Start the repository's DVWA Compose lab and initialize its database.
-4. Install XSS-PG in editable mode and confirm `xss-pg --help` works.
-5. Run the full unit-test suite.
-6. Complete one live local DVWA Reflected XSS (Low) demonstration, including the separate preparation and submission checkpoints.
-7. Inspect screenshots and repository files for credentials, personal information, and generated artifacts.
-8. Confirm `git status` is clean before tagging the release.
+## Interpretation and limitations
 
-Do not describe mocked tests as a live integration test. Do not describe a live test against one DVWA scenario as proof that other XSS types or applications are secure or vulnerable.
+- Playwright lifecycle unit tests use mocks; they verify control flow and cleanup but do not themselves execute a real browser test.
+- The live browser demonstration verifies one harmless proof-of-execution payload against one DVWA module and one security configuration: Reflected XSS at Low.
+- A successful result does not establish that other XSS types, other applications, or other security levels are vulnerable or secure.
+- A negative result does not prove that an application is free of XSS.
+- The release-test procedure above verifies a fresh Python environment, not a fresh source clone or an independently initialized Docker lab.

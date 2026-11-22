@@ -1,12 +1,12 @@
-# XSS-PG implementation and release plan
+# XSS-PG implementation and release record
 
-This plan records the actual Git history and remaining work. Commits are created only after the corresponding work exists and passes its acceptance checks. Do not backdate commits or manufacture earlier development history.
+This document records the actual development history of XSS-PG. Commits are listed in chronological order and reflect work that was completed and committed; they are not a proposed or backdated plan.
 
 ## Commit 1 — completed
 
 **Commit:** `753ceda chore: add DVWA XSS-PG project baseline`
 
-**Contents:** Initial project baseline with Python CLI, local DVWA scope checks, one harmless Reflected XSS payload, Playwright browser test, README, Docker Compose lab, and initial unit tests.
+**Contents:** Initial project baseline with Python CLI, local DVWA scope checks, one harmless Reflected XSS proof-of-execution payload, Playwright browser test, README, Docker Compose lab, and initial unit tests.
 
 ## Commit 2 — completed
 
@@ -14,7 +14,7 @@ This plan records the actual Git history and remaining work. Commits are created
 
 **Contents:** Improved authentication and failure messages, visible browser progress, operator checkpoints, separate payload preparation and submission, visible alert acknowledgement, cleanup tests, CLI interruption handling, and local screenshots.
 
-**Verification:** The group reported 37/37 automated tests passing and confirmed the Windows DVWA workflow, including the separate Enter checkpoint before form submission.
+**Verification at this stage:** The project team reported 37/37 automated tests passing and confirmed the Windows DVWA workflow, including the separate Enter checkpoint before form submission. The suite was subsequently expanded to 41 tests in Commit 3.
 
 ## Commit 3 — completed
 
@@ -22,27 +22,27 @@ This plan records the actual Git history and remaining work. Commits are created
 
 **Contents:** Added same-origin WebSocket routing alongside HTTP request restrictions, expanded browser-origin tests, improved connection and timeout handling, aligned the Playwright minimum version, and corrected the scope documentation.
 
-**Verification:** The group reported 41/41 automated tests passing and confirmed that option 2 still completed the live local DVWA Reflected XSS (Low) test.
+**Verification:** The project team reported 41/41 automated tests passing and confirmed that option 2 completed the live local DVWA Reflected XSS (Low) test.
 
-## Commit 4 — current work: final validation and assessment documentation
+## Commit 4 — completed
 
-**Proposed message:** `docs: complete attack lifecycle mapping and validation evidence`
+**Commit:** `31fb791 docs: complete attack lifecycle mapping and validation evidence`
 
-**Scope:** Make the README explicitly identify the attack category, map the implemented workflow to applicable ethical-hacking lifecycle stages, surface the committed screenshot evidence, and record the final validation status. Review clean installation, CLI help, test execution, repository hygiene, and the live DVWA procedure.
+**Contents:** Updated the README with explicit attack-category and lifecycle mapping, links to committed screenshots, ethical considerations, and project evidence. Added `docs/VALIDATION.md` to distinguish automated test evidence from manual end-to-end checks.
 
-**Acceptance checks:** README links resolve to committed screenshots; the lifecycle mapping does not claim capabilities outside the tool's scope; all unit tests pass; CLI help and package installation work; the team repeats the local DVWA test; no credentials or personal data appear in committed evidence; the working tree is clean after commit.
+## Commit 5 — completed
 
-## Commit 5 — planned: v1.0.0 release preparation
+**Commit:** `dc02bd5 release: prepare XSS-PG v1.0.0`
 
-**Proposed message:** `chore: prepare XSS-PG v1.0.0 release`
+**Contents:** Updated the package version in `pyproject.toml` from `0.2.0` to `1.0.0` after release-candidate validation.
 
-**Scope:** Final cleanup, version bump to `1.0.0`, release notes, final test run, and GitHub Release `v1.0.0` after the live demonstration succeeds.
+**Release:** Git tag `v1.0.0` was published as the latest GitHub Release in the public repository:
 
-**Acceptance checks:** all unit tests pass in a clean environment; the live DVWA test succeeds; `git status` is clean; the public repository contains no secrets or generated environments; release notes accurately describe the tool's limited scope.
+https://github.com/adambinborhan01-boop/XSS-Payload-Generator/releases/tag/v1.0.0
 
 ## Commit discipline
 
-- Each commit should contain only the work described by its message.
-- Run relevant tests before committing.
-- Keep real development history; never create a commit to imitate work that did not happen.
-- The final repository must show at least five meaningful commits and a `v1.0.0` release.
+- Each commit contains work that existed and was checked before it was committed.
+- Relevant tests are run before committing.
+- The Git history is the actual development history; commits are not fabricated or backdated.
+- The repository contains five meaningful commits and a published `v1.0.0` release.
