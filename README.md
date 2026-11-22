@@ -10,8 +10,9 @@ XSS-PG is a small Python command-line tool for generating one harmless proof-of-
 2. Accepts only `http://localhost:4280`, `http://127.0.0.1:4280`, or IPv6 loopback on port `4280`.
 3. Checks that the service presents the DVWA login page before proceeding.
 4. Generates a fixed alert-only payload for DVWA's Reflected XSS `name` parameter.
-5. Uses Playwright to log in, set the session's DVWA security level to **Low**, submit the payload, and look for the expected browser alert.
-6. Restricts browser requests to the validated local origin and closes the browser after the test.
+5. Uses Playwright to log in, set the session's DVWA security level to **Low**, and open the Reflected XSS module.
+6. Separates payload preparation from submission: after an operator checkpoint, XSS-PG places the payload in the `name` field but does not submit it. It reports that the payload is prepared and waits at a second checkpoint. Only a subsequent Enter submits the form.
+7. Restricts browser requests to the validated local origin, reports each testing stage, verifies the expected browser alert, and closes the browser after the test. Option 2 uses five operator checkpoints: after Chromium starts, after login succeeds, after Low security is confirmed, before preparing the payload, and after preparation but immediately before submission. In visible mode, the successful browser alert remains open until the user presses Enter in the terminal.
 
 A matching browser alert is the proof-of-execution signal. An HTTP response that merely contains the payload is not reported as a verified XSS finding.
 
@@ -113,7 +114,7 @@ PYTHONPATH=src python -m xsspg.cli
 
 The application displays the legal notice and asks for authorization before checking the target. The default target is `http://127.0.0.1:4280`.
 
-Choose **1** to display the payload or **2** to run the browser verification. The browser opens visibly by default so the demonstration can be recorded. Enter the DVWA credentials when prompted (press Enter to use the standard lab password `password`); the password is not saved by XSS-PG. Use `--headless` to run Chromium without a visible window.
+Choose **1** to display the payload or **2** to run the browser verification. Option 2 is deliberately operator-controlled: after Chromium starts, after login succeeds, after Low security is confirmed, before placing the payload in the form, and again after the payload is prepared but before submission, XSS-PG pauses and requires Enter before proceeding. These are operator checkpoints, not repeated legal authorization prompts. Press `Ctrl+C` at any checkpoint to abort; browser resources are closed during cleanup. The browser opens visibly by default. When the expected `XSS-PG` alert appears, the tool displays its message and keeps the browser dialog open until you press Enter in the terminal. Enter the DVWA credentials when prompted (press Enter to use the standard lab password `password`); the password is not saved by XSS-PG. Use `--headless` to run Chromium without a visible window or final browser-alert pause; all five operator checkpoints remain enabled.
 
 ```bash
 python -m xsspg.cli --target http://127.0.0.1:4280 --headless
@@ -125,7 +126,7 @@ python -m xsspg.cli --target http://127.0.0.1:4280 --headless
 python -m unittest discover -s tests -v
 ```
 
-The automated unit tests cover target-scope validation, payload generation, DVWA fingerprint recognition, and browser-origin/payload guards. A real browser integration test still requires the local DVWA Docker lab, working credentials, and Playwright Chromium.
+The automated unit tests cover target-scope validation, payload generation, DVWA fingerprint recognition, browser-origin/payload guards, authentication-state handling, operator-checkpoint order, preparation-before-submission sequencing, timeout handling, and browser/context cleanup on interruption. The Playwright lifecycle tests use mocks; a real browser integration test still requires the local DVWA Docker lab, working credentials, and Playwright Chromium.
 
 ## Test scenario
 
@@ -143,12 +144,12 @@ This is intentionally limited to a visible alert. Do not replace it with payload
 
 - **Authorization:** explicit confirmation is required at startup.
 - **Scope:** target scheme, host and port are fixed to local HTTP loopback on port 4280; target paths, URL credentials and remote hosts are rejected.
-- **Target identification:** the application checks for DVWA's login-page signature before starting a browser.
+- **Target identification:** the application checks for DVWA's login-page signature before starting a browser and reports connection refusal/timeouts without exposing raw operating-system error text.
 - **Browser egress:** Playwright requests are allowed only to the validated target origin.
 - **Test scope:** only the Reflected XSS module at Low security is exercised.
 - **Credentials:** requested interactively and used only for the local DVWA login session; not written to files or displayed.
 - **Data handling:** no target data is collected or exported.
-- **Kill switch:** select `Q` or press `Ctrl+C` to stop; Playwright resources are closed in cleanup.
+- **Kill switch:** select `Q` or press `Ctrl+C` to stop; Playwright context/browser cleanup runs even when the test is interrupted.
 - **Limitations:** this is a controlled proof-of-concept tester, not a general-purpose XSS scanner. A successful result demonstrates execution of this one test payload in this one DVWA configuration; a negative result does not prove the application is free of XSS.
 
 ## Rules of Engagement
@@ -177,4 +178,4 @@ Use only the local lab or systems covered by explicit written authorization. Una
 
 ## Project status
 
-This is a development project. Run the tests and complete a real local DVWA browser demonstration before describing the project as fully verified or creating the `v1.0.0` release.
+Current development baseline: 33 automated unit tests pass. The browser lifecycle tests use mocked Playwright objects; complete a real local DVWA browser demonstration after updating the project before describing the updated version as fully verified or creating the `v1.0.0` release.

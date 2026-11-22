@@ -1,37 +1,48 @@
-# Proposed five-commit implementation plan
+# XSS-PG implementation and release plan
 
-This is a prospective work plan, not a record of commits that have already happened. Create each commit only when the corresponding implementation is completed and tested. Do not backdate commits or claim planned work was completed earlier.
+This plan records the actual starting point and the remaining work. Create commits only after the described changes exist and their acceptance checks pass. Do not backdate commits or manufacture earlier development history.
 
-## Commit 1 — `chore: create Python project scaffold`
+## Commit 1 — completed
 
-**Files:** package layout, `pyproject.toml`, `requirements.txt`, `.gitignore`, starter README.
+**Commit:** `chore: add DVWA XSS-PG project baseline`
 
-**Acceptance checks:** fresh virtual environment installs dependencies; CLI starts and displays help.
+**Contents:** Initial project baseline with Python CLI, local DVWA scope checks, one harmless Reflected XSS payload, Playwright browser test, README, Docker Compose lab, and initial unit tests.
 
-## Commit 2 — `feat: enforce authorization and local DVWA scope`
+## Commit 2 — current work
 
-**Files:** `security.py`, `target.py`, `test_scope.py`, `test_target.py`, Compose lab configuration, related CLI wiring.
+**Proposed message:** `fix: improve DVWA test feedback and failure handling`
 
-**Acceptance checks:** authorization refusal exits; default target is loopback port 4280; remote hosts and non-approved ports are rejected; DVWA login-page fingerprint is required; target failure is handled cleanly.
+**Files:** `browser_test.py`, `cli.py`, `target.py`, corresponding tests, and README updates.
 
-## Commit 3 — `feat: add harmless DVWA reflected XSS payload generation`
+**Acceptance checks:** distinguish authentication failure from unavailable security settings; show progress through the browser workflow; require Enter at operator checkpoints after Chromium launch, successful login, Low-security confirmation, and before payload preparation and again after preparation immediately before submission; keep payload preparation and form submission as separate actions; keep the successful alert open until Enter in visible mode; provide a clear timeout result; avoid misleading security-level output on early failure; close browser/context on success, failure, timeout, and Ctrl+C at a checkpoint; keep the full unit suite passing; repeat the live DVWA test.
 
-**Files:** `payloads.py`, `test_payloads.py`.
+## Commit 3 — planned: optional local test report
 
-**Acceptance checks:** the reflected profile returns a structured payload for the `name` parameter; unsupported profiles fail safely; the payload only displays the XSS-PG alert marker and does not collect or transmit data.
+**Proposed message:** `feat: add opt-in local test result report`
 
-## Commit 4 — `feat: verify DVWA reflected XSS with Playwright`
+**Scope:** Add an explicit opt-in report containing only non-sensitive test metadata (timestamp, local target, module, configured security level, and outcome). Do not store credentials, session cookies, or browser data. Default behavior remains no file output.
 
-**Files:** `browser_test.py`, browser guard tests, CLI integration.
+**Acceptance checks:** report is created only when requested; output directory is local and git-ignored; tests confirm no credentials or cookies are written.
 
-**Acceptance checks:** the browser is limited to the validated local origin; the tool logs into DVWA, sets the session security level to Low, submits the payload to the Reflected XSS form, detects the expected dialog, and closes browser resources on success, failure, timeout, and interruption.
+## Commit 4 — planned: documentation and evidence
 
-## Commit 5 — `test: harden CLI and finalize v1.0.0 release`
+**Proposed message:** `docs: add verified setup and demonstration evidence`
 
-**Files:** expanded tests, final README / Rules of Engagement, screenshots or demo evidence, release notes.
+**Scope:** Finalize installation and troubleshooting guidance, add screenshots captured from the team's own live run, explain limitations, and ensure the README matches actual behavior.
 
-**Acceptance checks:** unit tests pass on a clean environment; real DVWA browser demonstration succeeds; help and error paths are checked; GitHub Release `v1.0.0` is created only after the code is actually complete.
+**Acceptance checks:** a teammate can reproduce the local setup from the README; screenshots contain no credentials or sensitive information; all claims are supported by actual tests.
+
+## Commit 5 — planned: release readiness
+
+**Proposed message:** `chore: prepare XSS-PG v1.0.0 release`
+
+**Scope:** Final cleanup, version/release notes, final test run, and GitHub Release `v1.0.0` after the live demonstration succeeds.
+
+**Acceptance checks:** all unit tests pass in a clean environment; the live DVWA test succeeds; `git status` is clean; public repository contains no secrets or generated environments; release notes accurately describe the tool's limited scope.
 
 ## Commit discipline
 
-Each commit should contain only the work described by its message. Run relevant tests before committing. The final repository should show five genuine, incremental commits authored by the team members who performed the work.
+- Each commit should contain only the work described by its message.
+- Run relevant tests before committing.
+- Keep real development history; never create a commit to imitate work that did not happen.
+- The final repository must show at least five meaningful commits and a `v1.0.0` release.

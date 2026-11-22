@@ -19,6 +19,12 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _operator_checkpoint(message: str) -> None:
+    """Require explicit operator acknowledgement before the next test stage."""
+    print(f"\n[OPERATOR CHECKPOINT] {message}")
+    input("Press ENTER to continue, or Ctrl+C to abort: ")
+
+
 def _run() -> int:
     args = parse_args()
     if not require_authorization():
@@ -35,13 +41,12 @@ def _run() -> int:
     identified, message = check_dvwa(target)
     print(f"[{'+' if identified else '!'}] {message}")
     if not identified:
-        print("Start the DVWA Docker Compose lab and complete its database setup before testing.")
         return 3
 
     while True:
         print("\nXSS PAYLOAD GENERATOR & TESTER — DVWA")
         print("[1] Generate Reflected XSS proof-of-concept")
-        print("[2] Test DVWA Reflected XSS (Low)")
+        print("[2] Test DVWA Reflected XSS (Low; operator checkpoints)")
         print("[Q] Quit")
         choice = input("Select: ").strip().lower()
 
@@ -63,10 +68,14 @@ def _run() -> int:
                 username,
                 password,
                 headless=args.headless,
+                progress_callback=print,
+                checkpoint_callback=_operator_checkpoint,
+                pause_for_alert=not args.headless,
             )
             print(result.message)
             print(f"Target: {result.target}")
-            print(f"Security level: {result.security_level}")
+            if result.security_level is not None:
+                print(f"Security level: {result.security_level}")
         elif choice in {"q", "quit", "exit"}:
             print("Exiting cleanly.")
             return 0

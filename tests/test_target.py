@@ -1,4 +1,5 @@
 import unittest
+from urllib.error import URLError
 from unittest.mock import patch
 
 from xsspg.target import check_dvwa
@@ -47,6 +48,24 @@ class TargetIdentificationTests(unittest.TestCase):
             ok, message = check_dvwa("http://127.0.0.1:4280")
         self.assertFalse(ok)
         self.assertIn("does not match DVWA", message)
+
+    def test_connection_refused_has_actionable_message_without_os_trace(self):
+        fake_opener = unittest.mock.MagicMock()
+        fake_opener.open.side_effect = URLError(ConnectionRefusedError("connection refused"))
+        with patch("xsspg.target.build_opener", return_value=fake_opener):
+            ok, message = check_dvwa("http://127.0.0.1:4280")
+        self.assertFalse(ok)
+        self.assertIn("DVWA is unavailable", message)
+        self.assertIn("port 4280", message)
+        self.assertNotIn("WinError", message)
+
+    def test_connection_timeout_has_actionable_message(self):
+        fake_opener = unittest.mock.MagicMock()
+        fake_opener.open.side_effect = URLError(TimeoutError("timed out"))
+        with patch("xsspg.target.build_opener", return_value=fake_opener):
+            ok, message = check_dvwa("http://127.0.0.1:4280")
+        self.assertFalse(ok)
+        self.assertIn("did not respond", message)
 
 
 if __name__ == "__main__":

@@ -38,9 +38,14 @@ def check_dvwa(target: str, timeout: float = 3.0) -> tuple[bool, str]:
             if status != 200:
                 return False, f"DVWA login page returned HTTP {status}."
     except HTTPError as exc:
-        return False, f"DVWA login page returned HTTP {exc.code}."
-    except (URLError, TimeoutError, OSError) as exc:
-        return False, f"Could not reach the local DVWA instance: {exc}"
+        return False, f"DVWA login page returned HTTP {exc.code}. Check the local lab setup."
+    except URLError as exc:
+        reason = getattr(exc, "reason", None)
+        if isinstance(reason, TimeoutError) or "timed out" in str(reason).lower():
+            return False, f"DVWA did not respond at {target}. Check that the local lab is running."
+        return False, f"DVWA is unavailable at {target}. Start the local lab and confirm port 4280."
+    except (TimeoutError, OSError):
+        return False, f"DVWA is unavailable at {target}. Start the local lab and confirm port 4280."
 
     if not all(signature in body for signature in DVWA_SIGNATURES):
         return False, "The local service responded, but its login page does not match DVWA."
