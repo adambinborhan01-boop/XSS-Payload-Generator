@@ -4,7 +4,8 @@ import argparse
 from getpass import getpass
 
 from .browser_test import run_reflected_xss_test
-from .payloads import PayloadProfile, generate_payload
+from .payloads import PayloadProfile, generate_payload, list_variants
+from .results_log import save_result
 from .security import DEFAULT_TARGET, ScopeError, normalize_local_target, require_authorization
 from .target import check_dvwa
 
@@ -53,10 +54,16 @@ def _run() -> int:
         if choice == "1":
             variants = list_variants(PayloadProfile.REFLECTED)
             names = list(variants)
-            print("\nAvailable payload variants. All are the same harmless alert,")
-            print("Injection just in different method:")
+            print("\nAvailable payload variants (all are the same harmless alert,")
+            print("just injected a different way):")
             for i, name in enumerate(names, start=1):
                 print(f"  [{i}] {name}: {variants[name]}")
+            pick = input(f"Pick a variant [1-{len(names)}, Enter for 1]: ").strip()
+            try:
+                index = int(pick) - 1 if pick else 0
+                chosen_name = names[index]
+            except (ValueError, IndexError):
+                print("Invalid choice, defaulting to variant 1.")
                 chosen_name = names[0]
             generated = generate_payload(PayloadProfile.REFLECTED, variant=chosen_name)
             print(f"\nProfile: {generated.profile.value}")
@@ -83,6 +90,8 @@ def _run() -> int:
             print(f"Target: {result.target}")
             if result.security_level is not None:
                 print(f"Security level: {result.security_level}")
+            log_path = save_result(result.target, generated.value, result.verified, result.security_level)
+            print(f"[*] Local result record saved to: {log_path}")
         elif choice in {"q", "quit", "exit"}:
             print("Exiting cleanly.")
             return 0
