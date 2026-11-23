@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Callable
 from urllib.parse import urlsplit
 
-from .payloads import REFLECTED_POC
+from .payloads import ALLOWED_PAYLOADS
 from .security import ScopeError, normalize_local_target
 
 ProgressCallback = Callable[[str], None]
@@ -84,8 +84,8 @@ def run_reflected_xss_test(
 ) -> BrowserTestResult:
     """Log in, set DVWA to Low, and verify the fixed alert payload in Chromium.
 
-    Browser requests are restricted to the validated local origin. The only
-    accepted payload is the harmless XSS-PG alert proof. If ``checkpoint_callback``
+    Browser requests are restricted to the validated local origin. Only the
+    built-in harmless XSS-PG alert variants may be submitted. If ``checkpoint_callback``
     is supplied, the operator must acknowledge each major stage before the next
     action proceeds. When ``pause_for_alert`` is enabled, the browser dialog also
     remains visible until the user presses Enter. KeyboardInterrupt is allowed to
@@ -96,10 +96,10 @@ def run_reflected_xss_test(
     except ScopeError as exc:
         return BrowserTestResult(False, f"Blocked by local scope policy: {exc}", target)
 
-    if payload != REFLECTED_POC:
+    if payload not in ALLOWED_PAYLOADS:
         return BrowserTestResult(
             False,
-            "Blocked: this test accepts only the built-in harmless XSS-PG payload.",
+            "Blocked: this test only accepts one of the built-in harmless XSS-PG payload variants.",
             target,
         )
     if not username.strip() or not password:
