@@ -51,7 +51,14 @@ def _run() -> int:
         choice = input("Select: ").strip().lower()
 
         if choice == "1":
-            generated = generate_payload(PayloadProfile.REFLECTED)
+            variants = list_variants(PayloadProfile.REFLECTED)
+            names = list(variants)
+            print("\nAvailable payload variants. All are the same harmless alert,")
+            print("Injection just in different method:")
+            for i, name in enumerate(names, start=1):
+                print(f"  [{i}] {name}: {variants[name]}")
+                chosen_name = names[0]
+            generated = generate_payload(PayloadProfile.REFLECTED, variant=chosen_name)
             print(f"\nProfile: {generated.profile.value}")
             print(f"Parameter: {generated.parameter}")
             print(f"Description: {generated.description}")
