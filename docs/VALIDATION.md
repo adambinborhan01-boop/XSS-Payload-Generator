@@ -10,13 +10,14 @@ Command:
 python -m unittest discover -s tests -v
 ```
 
-**Latest reported result from the project team's Windows environment: 41 tests passed.** The same 41-test suite passed in the separate release-test virtual environment described below.
+**Latest reported result from the project team's Windows environment: 47 tests passed.** The same 47-test suite passed in the separate release-test virtual environment described below.
 
 The suite covers:
 
 - local target validation and rejection of remote hosts, wrong ports, URL paths, and embedded credentials;
 - DVWA login-page identification and connection error handling;
-- fixed harmless payload generation and rejection of unsupported payloads;
+- harmless payload generation consist of four built-in variants, and support rejection for any irrelevant payloads or unknown variant names;
+- local JSONL result logging, including that it degrades to give warning (not a crash) when the directory file output cannot be written;
 - HTTP and WebSocket same-origin policy decisions;
 - authentication failure, timeout reporting, and browser/context cleanup using mocked Playwright objects;
 - operator-checkpoint order and separation of payload preparation from submission;
@@ -51,7 +52,7 @@ The project team reported the following verification on Windows:
 | Payload preparation checkpoint | Filled the `name` field without submitting the form |
 | Separate submission checkpoint | Required a second Enter before submitting the form |
 | Live test after WebSocket-scope hardening | Completed successfully against the local DVWA instance |
-| Release-test environment | Installed package version `1.0.0`, passed all 41 tests, and completed the live DVWA workflow |
+| Release-test environment | Installed package version `1.0.0`, passed all 47 tests, and completed the live DVWA workflow |
 
 Screenshots for the manual checks are stored in `docs/screenshots/`.
 

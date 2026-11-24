@@ -91,7 +91,8 @@ def _run() -> int:
             if result.security_level is not None:
                 print(f"Security level: {result.security_level}")
             log_path = save_result(result.target, generated.value, result.verified, result.security_level)
-            print(f"[*] Local result record saved to: {log_path}")
+            if log_path:
+                print(f"[*] Local result record saved to: {log_path}")
         elif choice in {"q", "quit", "exit"}:
             print("Exiting cleanly.")
             return 0
