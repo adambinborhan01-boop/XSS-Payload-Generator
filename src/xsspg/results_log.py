@@ -7,13 +7,12 @@ import json
 import os
 from datetime import datetime
 
+
 OUTPUT_DIR = "output"
 
-def save_result(target: str, payload: str, verified: bool, security_level: str | None) -> str | None:
-    """Append one JSON line describing this run to a local, dated log file."""
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    log_path = os.path.join(OUTPUT_DIR, "xss_pg_results.jsonl")
 
+def save_result(target: str, payload: str, verified: bool, security_level: str | None) -> str | None:
+    """Append one JSON line describing this run to a local, dated log file"""
     entry = {
         "timestamp": datetime.now().strftime("%d-%m-%Y %I:%M:%S %p"),
         "target": target,
@@ -23,20 +22,20 @@ def save_result(target: str, payload: str, verified: bool, security_level: str |
         "note": "Local record only. No data is sent off this machine.",
     }
 
-    try: 
-        os.makedirs(OUTPUT_DIR, exist_ok=TRUE)
+    try:
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
     except OSError as exc:
-        print(f"Warning! Could not create '{OUTPUT_DIR}'/' for local logging: {exc}")
-        print("Warning! The XSS test result above will not affected, only this local record was skipped")
+        print(f"[!] Could not create '{OUTPUT_DIR}/' for local logging: {exc}")
+        print("[!] The XSS test result above is unaffected; only this local record was skipped.")
+        return None
 
     log_path = os.path.join(OUTPUT_DIR, "xss_pg_results.jsonl")
-    try: 
-
+    try:
         with open(log_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(entry) + "\n")
     except OSError as exc:
-        print(f"Warning! Could not write local result to '{log_path}': {exc}")
-        print("Warning! The XSS test result will not affected, only this local record was skipped")
+        print(f"[!] Could not write local result record to '{log_path}': {exc}")
+        print("[!] The XSS test result above is unaffected; only this local record was skipped.")
         return None
 
     return log_path
