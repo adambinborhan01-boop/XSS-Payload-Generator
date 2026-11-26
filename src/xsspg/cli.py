@@ -26,6 +26,20 @@ def _operator_checkpoint(message: str) -> None:
     input("Press ENTER to continue, or Ctrl+C to abort: ")
 
 
+def _select_variant(variants: dict) -> str:
+    names = list(variants)
+    print("\nAvailable payload variants (all are the same harmless alert,")
+    print("just injected a different way):")
+    for i, name in enumerate(names, start=1):
+        print(f"  [{i}] {name}: {variants[name]}")
+    pick = input(f"Pick a variant [1-{len(names)}, Enter for 1]: ").strip()
+    try:
+        index = int(pick) - 1 if pick else 0
+        return names[index]
+    except (ValueError, IndexError):
+        print("Invalid choice, defaulting to variant 1.")
+        return names[0]
+    
 def _run() -> int:
     args = parse_args()
     if not require_authorization():
@@ -57,7 +71,7 @@ def _run() -> int:
             print("\nAvailable payload variants (all are the same harmless alert,")
             print("just injected a different way):")
             for i, name in enumerate(names, start=1):
-                print(f"  [{i}] {name}: {variants[name]}")
+                print(f"  [{i}] {name}")
             pick = input(f"Pick a variant [1-{len(names)}, Enter for 1]: ").strip()
             try:
                 index = int(pick) - 1 if pick else 0
@@ -71,10 +85,12 @@ def _run() -> int:
             print(f"Description: {generated.description}")
             print(f"Payload: {generated.value}")
         elif choice == "2":
+            variants = list_variants(PayloadProfile.REFLECTED)
+            chosen_name = _select_variant(variants)
+            generated = generate_payload(PayloadProfile.REFLECTED, variant=chosen_name)
             username = input("DVWA username [admin]: ").strip() or "admin"
             password = getpass("DVWA password [press Enter for default 'password']: ")
             password = password or "password"
-            generated = generate_payload(PayloadProfile.REFLECTED)
             print("\n[*] Starting local Chromium test. Credentials are used only for this DVWA session.")
             result = run_reflected_xss_test(
                 target,
